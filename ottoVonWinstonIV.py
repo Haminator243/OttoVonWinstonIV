@@ -1,5 +1,4 @@
 #This is where the fun begins
-import webbrowser
 import requests
 from bs4 import BeautifulSoup
 import time
@@ -18,6 +17,8 @@ RECCE_RIG_STOCK_STATUS = "RECCE RIG not in stock. :("
 SIMP_POUCH_STOCK_STATUS = "SIMP Pouch not in stock. :("
 GORILLA_MIND_SMOOTH_STOCK_STATUS = "SIMP Pouch not in stock. :("
 
+#TODO: Create url .json
+
 #Creating discord client object
 intents=discord.Intents.default()
 intents.message_content = True
@@ -27,7 +28,6 @@ client = discord.Client(intents=intents)
 load_dotenv()
 
 def main():
-    #test = webbrowser.open(RECCE_RIG_URL, new=1) #This opens a web browser for the user. It doesn't grab the html.
     botThread = threading.Thread(target= bot_func)
     
     # discord event to check when the bot is online 
@@ -50,64 +50,9 @@ def main():
         simpPouchBeautifulSoupObject = BeautifulSoup(simpPouchPageRequest.text, 'html.parser')
 
         gorillaMindSmoothPageRequest = requests.get(GORILLA_MIND_SMOOTH_URL)
-        gorillaMindSmoothBeautifulSoupObject = BeautifulSoup(gorillaMindSmoothPageRequest.text, 'html.parser')
-
-        #Checking the product availability 
-        if onward_research_item_stock_check(recceRigBeautifulSoupObject):
-            print("RECCE Rig in stock!\n")
-            RECCE_RIG_STOCK_STATUS = "RECCE Rig in stock!"
-        else:
-            print("RECCE Rig not in stock. :(\n")
-            RECCE_RIG_STOCK_STATUS = "RECCE Rig not in stock. :("
-
-        if onward_research_item_stock_check(simpPouchBeautifulSoupObject):
-            print("SIMP Pouch in stock!\n")
-            SIMP_POUCH_STOCK_STATUS = "SIMP Pouch in stock!"
-        else:
-            print("SIMP Pouch not in stock. :(\n")
-            SIMP_POUCH_STOCK_STATUS = "SIMP Pouch not in stock. :("
-
-        if gorilla_mind_item_stock_check(gorillaMindSmoothBeautifulSoupObject):
-            print("Gorilla Mind Smooth in stock!\n")
-            GORILLA_MIND_SMOOTH_STOCK_STATUS = "Gorilla Mind Smooth in stock!"
-        else:
-            print("Gorilla Mind Smooth not in stock. :(\n")
-            GORILLA_MIND_SMOOTH_STOCK_STATUS = "Gorilla Mind Smooth not in stock. :("    
+        gorillaMindSmoothBeautifulSoupObject = BeautifulSoup(gorillaMindSmoothPageRequest.text, 'html.parser') 
 
         time.sleep(300)
-    
-
-def clean_html_text(htmlText):
-    """Cleaning the "undesirables" out of your html"""
-    htmlText = htmlText.replace("\n", "")
-    htmlText = htmlText.replace("\xa0", "")
-
-    return htmlText
-
-
-def onward_research_item_stock_check(soupObject):
-    tempDict = {"class": "product-quantity-submit"}
-    tempSoupStorage = soupObject.find("div", tempDict)
-    productQuantitySubmitClassText = tempSoupStorage.text
-    if "Add to Bag" in productQuantitySubmitClassText:
-        return True
-    elif "Sold Out" in productQuantitySubmitClassText:
-        return False
-    else:
-        print("Unable to find purchase button info")
-        return False
-    
-def gorilla_mind_item_stock_check(soupObject):
-    tempDict = {"class": "product__price"}
-    tempSoupStorage = soupObject.find("div", tempDict)
-    productPriceClassText = tempSoupStorage.text
-    if "Add to Cart" in productPriceClassText:
-        return True
-    elif "Sold Out" in productPriceClassText:
-        return False
-    else:
-        print("Unable to find purchase button info")
-        return False
 
  
 def bot_func():
