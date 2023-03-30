@@ -50,7 +50,7 @@ def main():
         simpPouchBeautifulSoupObject = BeautifulSoup(simpPouchPageRequest.text, 'html.parser')
 
         gorillaMindSmoothPageRequest = requests.get(GORILLA_MIND_SMOOTH_URL)
-        gorillaMindSmootBeautifulSoupObject = BeautifulSoup(gorillaMindSmoothPageRequest.text, 'html.parser')
+        gorillaMindSmoothBeautifulSoupObject = BeautifulSoup(gorillaMindSmoothPageRequest.text, 'html.parser')
 
         #Checking the product availability 
         if onward_research_item_stock_check(recceRigBeautifulSoupObject):
@@ -67,7 +67,7 @@ def main():
             print("SIMP Pouch not in stock. :(\n")
             SIMP_POUCH_STOCK_STATUS = "SIMP Pouch not in stock. :("
 
-        if gorilla_mind_item_stock_check(gorillaMindSmootBeautifulSoupObject):
+        if gorilla_mind_item_stock_check(gorillaMindSmoothBeautifulSoupObject):
             print("Gorilla Mind Smooth in stock!\n")
             GORILLA_MIND_SMOOTH_STOCK_STATUS = "Gorilla Mind Smooth in stock!"
         else:
