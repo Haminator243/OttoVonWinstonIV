@@ -5,7 +5,15 @@ def page_request(URL):
     pageRequest = None
     pageRequest = requests.get(URL)
     beautifulSoupObject = BeautifulSoup(pageRequest.text, 'html.parser')
-    return pageRequest
+    return beautifulSoupObject
+
+
+def stock_request(soupObject, key):
+    match key:
+        case 0:
+            return onward_research_item_stock_check(soupObject)
+        case 1:
+            return gorilla_mind_item_stock_check(soupObject)
 
 
 def onward_research_item_stock_check(soupObject):
@@ -13,12 +21,12 @@ def onward_research_item_stock_check(soupObject):
     tempSoupStorage = soupObject.find("div", tempDict)
     productQuantitySubmitClassText = tempSoupStorage.text
     if "Add to Bag" in productQuantitySubmitClassText:
-        return True
+        return "in stock!"
     elif "Sold Out" in productQuantitySubmitClassText:
-        return False
+        return "not in stock :("
     else:
         print("Unable to find purchase button info")
-        return False
+        return "unable to successfully find stock status. Please contact bot administrator."
     
 
 def gorilla_mind_item_stock_check(soupObject):
@@ -26,10 +34,10 @@ def gorilla_mind_item_stock_check(soupObject):
     tempSoupStorage = soupObject.find("div", tempDict)
     productPriceClassText = tempSoupStorage.text
     if "Add to Cart" in productPriceClassText:
-        return True
+        return "in stock!"
     elif "Sold Out" in productPriceClassText:
-        return False
+        return "not in stock :("
     else:
         print("Unable to find purchase button info")
-        return False
+        return "unable to successfully find stock status. Please contact bot administrator."
     
