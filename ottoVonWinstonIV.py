@@ -1,22 +1,11 @@
 #This is where the fun begins
-import webbrowser
-import requests
-from bs4 import BeautifulSoup
 import time
 import discord
 import os
 from dotenv import load_dotenv
 import threading
-
-#Web Page URLs
-RECCE_RIG_URL = "https://onwardresearch.com/recce-rig/"
-SIMP_POUCH_URL = "https://onwardresearch.com/simp-pouch/"
-GORILLA_MIND_SMOOTH_URL = "https://gorillamind.com/products/gorilla-mind-smooth"
-
-#Declaraion of global item stock messages.
-RECCE_RIG_STOCK_STATUS = "RECCE RIG not in stock. :("
-SIMP_POUCH_STOCK_STATUS = "SIMP Pouch not in stock. :("
-GORILLA_MIND_SMOOTH_STOCK_STATUS = "SIMP Pouch not in stock. :("
+import json
+import webScrape
 
 #Creating discord client object
 intents=discord.Intents.default()
@@ -26,98 +15,35 @@ client = discord.Client(intents=intents)
 #Grab environment variables
 load_dotenv()
 
+#initialize global variable
+itemCatalog = {}
+
 def main():
-    #test = webbrowser.open(RECCE_RIG_URL, new=1) #This opens a web browser for the user. It doesn't grab the html.
     botThread = threading.Thread(target= bot_func)
     
     # discord event to check when the bot is online 
     @client.event
     async def on_ready():
-        print(f'{client.user} is now online!')   
+        print(f'{client.user} is now online!')
     botThread.start()
 
     while(1):
-        global RECCE_RIG_STOCK_STATUS
-        global SIMP_POUCH_STOCK_STATUS
-        global GORILLA_MIND_SMOOTH_STOCK_STATUS
-
-        print("Searching web pages...")
-        #Page Requests
-        recceRigPageRequest = requests.get(RECCE_RIG_URL)
-        recceRigBeautifulSoupObject = BeautifulSoup(recceRigPageRequest.text, 'html.parser')
-
-        simpPouchPageRequest = requests.get(SIMP_POUCH_URL)
-        simpPouchBeautifulSoupObject = BeautifulSoup(simpPouchPageRequest.text, 'html.parser')
-
-        gorillaMindSmoothPageRequest = requests.get(GORILLA_MIND_SMOOTH_URL)
-        gorillaMindSmoothBeautifulSoupObject = BeautifulSoup(gorillaMindSmoothPageRequest.text, 'html.parser')
-
-        #Checking the product availability 
-        if onward_research_item_stock_check(recceRigBeautifulSoupObject):
-            print("RECCE Rig in stock!\n")
-            RECCE_RIG_STOCK_STATUS = "RECCE Rig in stock!"
-        else:
-            print("RECCE Rig not in stock. :(\n")
-            RECCE_RIG_STOCK_STATUS = "RECCE Rig not in stock. :("
-
-        if onward_research_item_stock_check(simpPouchBeautifulSoupObject):
-            print("SIMP Pouch in stock!\n")
-            SIMP_POUCH_STOCK_STATUS = "SIMP Pouch in stock!"
-        else:
-            print("SIMP Pouch not in stock. :(\n")
-            SIMP_POUCH_STOCK_STATUS = "SIMP Pouch not in stock. :("
-
-        if gorilla_mind_item_stock_check(gorillaMindSmoothBeautifulSoupObject):
-            print("Gorilla Mind Smooth in stock!\n")
-            GORILLA_MIND_SMOOTH_STOCK_STATUS = "Gorilla Mind Smooth in stock!"
-        else:
-            print("Gorilla Mind Smooth not in stock. :(\n")
-            GORILLA_MIND_SMOOTH_STOCK_STATUS = "Gorilla Mind Smooth not in stock. :("    
-
-        time.sleep(300)
-    
-
-def clean_html_text(htmlText):
-    """Cleaning the "undesirables" out of your html"""
-    htmlText = htmlText.replace("\n", "")
-    htmlText = htmlText.replace("\xa0", "")
-
-    return htmlText
-
-
-def onward_research_item_stock_check(soupObject):
-    tempDict = {"class": "product-quantity-submit"}
-    tempSoupStorage = soupObject.find("div", tempDict)
-    productQuantitySubmitClassText = tempSoupStorage.text
-    if "Add to Bag" in productQuantitySubmitClassText:
-        return True
-    elif "Sold Out" in productQuantitySubmitClassText:
-        return False
-    else:
-        print("Unable to find purchase button info")
-        return False
-    
-def gorilla_mind_item_stock_check(soupObject):
-    tempDict = {"class": "product__price"}
-    tempSoupStorage = soupObject.find("div", tempDict)
-    productPriceClassText = tempSoupStorage.text
-    if "Add to Cart" in productPriceClassText:
-        return True
-    elif "Sold Out" in productPriceClassText:
-        return False
-    else:
-        print("Unable to find purchase button info")
-        return False
+        jsonFile = open("config.json")
+        websiteData = json.load(jsonFile)
+        global itemCatalog
+        for website in websiteData:
+            for item in websiteData[website]:
+                #Page request
+                soupObject = webScrape.page_request(websiteData[website][item]["url"])
+                #Check if item is in stock
+                stockStatus = webScrape.stock_request(soupObject, websiteData[website][item]["stockCheckType"])
+                #Add item to the catalog
+                itemCatalog[item] = (f"{item} is {stockStatus}", websiteData[website][item]["url"])
+        time.sleep(60)
 
  
 def bot_func():
-    global RECCE_RIG_STOCK_STATUS
-    global SIMP_POUCH_STOCK_STATUS
-    global GORILLA_MIND_SMOOTH_STOCK_STATUS
-
-    global RECCE_RIG_URL
-    global SIMP_POUCH_URL
-    global GORILLA_MIND_SMOOTH_URL
+    global itemCatalog
     @client.event
     async def on_message(message): 
         # make sure bot doesn't respond to it's own messages to avoid infinite loop
@@ -125,34 +51,30 @@ def bot_func():
             return  
         if "+otto" in message.content.lower():
             messageSent = False
-            helpMessage = ("To check the stock on the RECCE Rig type:\n    +Otto recce\n"
-                           "To check the stock on the SIMP Pouch type:\n    +Otto simp\n"
-                           "To check the stock on Gorilla Mind Smooth type:\n    +Otto gorilla\n    +Otto mind\n    +Otto smooth\n"
-                           "To check all items type:\n    +Otto all\n")
             messageContent = message.content.lower()
             messageList = messageContent.split(" ")
             for input in messageList:
                 if "all" in input:
-                    await message.channel.send(
-                        f"{RECCE_RIG_STOCK_STATUS}\n{RECCE_RIG_URL}\n\n"
-                        f"{SIMP_POUCH_STOCK_STATUS}\n{SIMP_POUCH_URL}\n\n"
-                        f"{GORILLA_MIND_SMOOTH_STOCK_STATUS}\n{GORILLA_MIND_SMOOTH_URL}\n"
-                        )
+                    response = ""
+                    for item in itemCatalog:
+                        response = response + f"{itemCatalog[item][0]}\n{itemCatalog[item][1]}\n\n"
+                    await message.channel.send(response)    
                     messageSent = True
                 if "help" in input:
+                    helpMessage = ""
+                    for item in itemCatalog:
+                        helpMessage = helpMessage + f"To check the stock on {item} type:\n"
+                        for name in item.split(" "):
+                            helpMessage = helpMessage + f"    +Otto {name.lower()}\n"
+                        helpMessage = helpMessage + "\n\n"
                     await message.channel.send(f"{helpMessage}\n")
                     messageSent = True
-                if "recce" in input:
-                    await message.channel.send(f"{RECCE_RIG_STOCK_STATUS}\n{RECCE_RIG_URL}\n")
-                    messageSent = True
-                if "simp" in input:
-                    await message.channel.send(f"{SIMP_POUCH_STOCK_STATUS}\n{SIMP_POUCH_URL}\n")
-                    messageSent = True
-                if ("gorilla" in input) or ("mind" in input) or ("smooth" in input):
-                    await message.channel.send(f"{GORILLA_MIND_SMOOTH_STOCK_STATUS}\n{GORILLA_MIND_SMOOTH_URL}\n")
-                    messageSent = True
+                for item in itemCatalog:
+                    if input in item.lower(): #This may become problematic as the list of items grows.
+                      await message.channel.send(f"{itemCatalog[item][0]}\n{itemCatalog[item][1]}\n") 
+                      messageSent = True 
             if not messageSent:
-                await message.channel.send(f"I wasn't able to find what you were asking\nThese are my only commands:\n{helpMessage}\n")
+                await message.channel.send(f"I wasn't able to find what you were asking\nPlease type \"+Otto help\" to see a list of my commands.\n")
 
     client.run(os.getenv('TOKEN'))
 
