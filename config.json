@@ -1,0 +1,19 @@
+{
+    "onwardresearch":{
+        "RECCE Rig":{
+            "url": "https://onwardresearch.com/recce-rig/",
+            "stockCheckType": 0
+        },
+        "SIMP Pouch":{ 
+            "url": "https://onwardresearch.com/simp-pouch/",          
+            "stockCheckType": 0
+        }
+    },
+    "gorrillamind":{
+        "Gorilla Mind Smooth":{
+            "url": "https://gorillamind.com/products/gorilla-mind-smooth",
+            "stockCheckType": 1
+        }
+    }
+}
+ 
