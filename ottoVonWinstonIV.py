@@ -59,7 +59,7 @@ def main():
 
     async def recceInStockMessage():
         channel = client.get_channel(int(os.getenv('OTTO_CHANNEL')))
-        while(0): #Keeping this as an example on how to send messages to a channel without
+        while(0): #Keeping this as an example on how to send messages to a channel without a prompt
             await asyncio.sleep(10)
             if itemCatalog["RECCE Rig"][0] == "RECCE Rig is in stock!":
                 await channel.send(itemCatalog["RECCE Rig"][0] + "\n\n")
@@ -67,11 +67,23 @@ def main():
             else:
                 print(itemCatalog["RECCE Rig"][0] + "\n\n")
 
+    async def fridaySpecial():
+        channel = client.get_channel(int(os.getenv('GAME_CHAT_CHANNEL')))
+        fridaySpecialPath = os.getcwd() + "\FridaySpecial.mov"
+        fridaySpecialFile = discord.File(fridaySpecialPath, filename = "FridaySpecial.mov")
+        while(1):
+            await asyncio.sleep(60*5)
+            currentTime = time.asctime()
+            if (currentTime.tm_wday == 4) and (currentTime.tm_hour == 9) and (currentTime.tm_min < 10):
+                await channel.send(file=fridaySpecialFile)
+                await asyncio.sleep(60*5 + 1)
+
     # discord event to check when the bot is online 
     @client.event
     async def on_ready():
         print(f'{client.user} is now online!')
         await recceInStockMessage()
+        await fridaySpecial()
     botThread.start()
 
     while(1):
