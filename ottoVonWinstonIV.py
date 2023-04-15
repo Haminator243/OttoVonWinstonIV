@@ -67,11 +67,23 @@ def main():
             else:
                 print(itemCatalog["RECCE Rig"][0] + "\n\n")
 
+    async def fridaySpecial():
+        channel = client.get_channel(int(os.getenv('GAME_CHAT_CHANNEL')))
+        fridaySpecialPath = os.getcwd() + "\FridaySpecial.mov"
+        fridaySpecialFile = discord.File(fridaySpecialPath, filename = "FridaySpecial.mov")
+        while(1):
+            await asyncio.sleep(60*5)
+            currentTime = time.asctime()
+            if (currentTime.tm_wday == 4) and (currentTime.tm_hour == 9) and (currentTime.tm_min < 10):
+                await channel.send(file=fridaySpecialFile)
+                await asyncio.sleep(60*5 + 1)
+
     # discord event to check when the bot is online 
     @client.event
     async def on_ready():
         print(f'{client.user} is now online!')
         await recceInStockMessage()
+        await fridaySpecial()
     botThread.start()
 
     while(1):
