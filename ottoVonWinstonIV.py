@@ -59,7 +59,7 @@ def main():
 
     async def recceInStockMessage():
         channel = client.get_channel(int(os.getenv('OTTO_CHANNEL')))
-        while(0): #Keeping this as an example on how to send messages to a channel without
+        while(0): #Keeping this as an example on how to send messages to a channel without a prompt
             await asyncio.sleep(10)
             if itemCatalog["RECCE Rig"][0] == "RECCE Rig is in stock!":
                 await channel.send(itemCatalog["RECCE Rig"][0] + "\n\n")
