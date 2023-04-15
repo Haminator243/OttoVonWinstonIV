@@ -73,7 +73,7 @@ def main():
         fridaySpecialFile = discord.File(fridaySpecialPath, filename = "FridaySpecial.mov")
         while(1):
             await asyncio.sleep(60*5)
-            currentTime = time.asctime()
+            currentTime = time.localtime()
             if (currentTime.tm_wday == 4) and (currentTime.tm_hour == 9) and (currentTime.tm_min < 10):
                 await channel.send(file=fridaySpecialFile)
                 await asyncio.sleep(60*5 + 1)
