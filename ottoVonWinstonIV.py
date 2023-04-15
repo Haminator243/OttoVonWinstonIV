@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import threading
 import json
 import webScrape
+import asyncio
 
 #Creating discord client object
 intents=discord.Intents.default()
@@ -20,30 +21,10 @@ itemCatalog = {}
 
 def main():
     botThread = threading.Thread(target= bot_func)
-    
-    # discord event to check when the bot is online 
-    @client.event
-    async def on_ready():
-        print(f'{client.user} is now online!')
-    botThread.start()
 
-    while(1):
-        jsonFile = open("config.json")
-        websiteData = json.load(jsonFile)
-        global itemCatalog
-        for website in websiteData:
-            for item in websiteData[website]:
-                #Page request
-                soupObject = webScrape.page_request(websiteData[website][item]["url"])
-                #Check if item is in stock
-                stockStatus = webScrape.stock_request(soupObject, websiteData[website][item]["stockCheckType"])
-                #Add item to the catalog
-                itemCatalog[item] = (f"{item} is {stockStatus}", websiteData[website][item]["url"])
-        time.sleep(60)
-
- 
-def bot_func():
     global itemCatalog
+    global client
+
     @client.event
     async def on_message(message): 
         # make sure bot doesn't respond to it's own messages to avoid infinite loop
@@ -76,6 +57,38 @@ def bot_func():
             if not messageSent:
                 await message.channel.send(f"I wasn't able to find what you were asking\nPlease type \"+Otto help\" to see a list of my commands.\n")
 
+    async def recceInStockMessage():
+        channel = client.get_channel(int(os.getenv('OTTO_CHANNEL')))
+        while(0): #Keeping this as an example on how to send messages to a channel without
+            await asyncio.sleep(10)
+            if itemCatalog["RECCE Rig"][0] == "RECCE Rig is in stock!":
+                await channel.send(itemCatalog["RECCE Rig"][0] + "\n\n")
+                print(itemCatalog["RECCE Rig"][0] + "\n\n")
+            else:
+                print(itemCatalog["RECCE Rig"][0] + "\n\n")
+
+    # discord event to check when the bot is online 
+    @client.event
+    async def on_ready():
+        print(f'{client.user} is now online!')
+        await recceInStockMessage()
+    botThread.start()
+
+    while(1):
+        jsonFile = open("config.json")
+        websiteData = json.load(jsonFile)
+        for website in websiteData:
+            for item in websiteData[website]:
+                #Page request
+                soupObject = webScrape.page_request(websiteData[website][item]["url"])
+                #Check if item is in stock
+                stockStatus = webScrape.stock_request(soupObject, websiteData[website][item]["stockCheckType"])
+                #Add item to the catalog
+                itemCatalog[item] = (f"{item} is {stockStatus}\nTime of search: {time.asctime()}", websiteData[website][item]["url"])                    
+        time.sleep(30)
+
+ 
+def bot_func():  
     client.run(os.getenv('TOKEN'))
 
 
