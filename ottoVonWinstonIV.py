@@ -75,7 +75,11 @@ def main():
             await asyncio.sleep(60*5)
             currentTime = time.localtime()
             if (currentTime.tm_wday == 4) and (currentTime.tm_hour == 9) and (currentTime.tm_min < 10):
-                await channel.send(file=fridaySpecialFile)
+                try:
+                    await channel.send(file=fridaySpecialFile)
+                except Exception as error:
+                    print(f"Failed to send Friday Special. Error output is {error}")
+
                 await asyncio.sleep(60*5 + 1)
 
     # discord event to check when the bot is online 
@@ -92,12 +96,20 @@ def main():
         for website in websiteData:
             for item in websiteData[website]:
                 #Page request
-                soupObject = webScrape.page_request(websiteData[website][item]["url"])
+                url = websiteData[website][item]["url"]
+                try:
+                    soupObject = webScrape.page_request(url)
+                except Exception as error:
+                    print(f"Failed to get web page html for {item} with url: {url}\nError given: {error}\n\n")
                 #Check if item is in stock
-                stockStatus = webScrape.stock_request(soupObject, websiteData[website][item]["stockCheckType"])
+                try:
+                    stockStatus = webScrape.stock_request(soupObject, websiteData[website][item]["stockCheckType"])
+                except:
+                    print(f"Failed to parse web page html for {item}.\nError given: {error}\n\n")
+                    stockStatus = f"failed to correctly get {item} stock status."
                 #Add item to the catalog
-                itemCatalog[item] = (f"{item} is {stockStatus}\nTime of search: {time.asctime()}", websiteData[website][item]["url"])                    
-        time.sleep(30)
+                itemCatalog[item] = (f"**{item}** is {stockStatus}\nTime of search: {time.asctime()}", websiteData[website][item]["url"])                    
+        time.sleep(60)
 
  
 def bot_func():  
