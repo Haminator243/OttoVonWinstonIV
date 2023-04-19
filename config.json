@@ -7,6 +7,10 @@
         "SIMP Pouch":{ 
             "url": "https://onwardresearch.com/simp-pouch/",          
             "stockCheckType": 0
+        },
+        "Slings":{
+            "url":"https://onwardresearch.com/slings/",
+            "stockCheckType": 0
         }
     },
     "gorrillamind":{
