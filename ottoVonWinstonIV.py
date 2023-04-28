@@ -38,7 +38,7 @@ def main():
                 if "all" in input:
                     response = ""
                     for item in itemCatalog:
-                        response = response + f"{itemCatalog[item][0]}\n{itemCatalog[item][1]}\n\n"
+                        response = response + f"{itemCatalog[item][0]}\n{itemCatalog[item][1]}\n{itemCatalog[item][2]}\n\n"
                     await message.channel.send(response)    
                     messageSent = True
                 if "help" in input:
@@ -52,7 +52,7 @@ def main():
                     messageSent = True
                 for item in itemCatalog:
                     if input in item.lower(): #This may become problematic as the list of items grows.
-                      await message.channel.send(f"{itemCatalog[item][0]}\n{itemCatalog[item][1]}\n") 
+                      await message.channel.send(f"{itemCatalog[item][0]}\n{itemCatalog[item][1]}\n{itemCatalog[item][2]}\n\n") 
                       messageSent = True 
             if not messageSent:
                 await message.channel.send(f"I wasn't able to find what you were asking\nPlease type \"+Otto help\" to see a list of my commands.\n")
@@ -66,6 +66,28 @@ def main():
                 print(itemCatalog["RECCE Rig"][0] + "\n\n")
             else:
                 print(itemCatalog["RECCE Rig"][0] + "\n\n")
+
+    async def inStockMessage():
+        channel = client.get_channel(int(os.getenv('OTTO_CHANNEL')))
+        await asyncio.sleep(5)
+        oldCatalog = itemCatalog
+        while(1): 
+            await asyncio.sleep(1)
+            for item in itemCatalog:
+                try:
+                    if (
+                        (oldCatalog[item][0] != itemCatalog[item][0])
+                        and not 
+                        (("Please contact bot administrator." in oldCatalog[item][0]) or ("Please contact bot administrator." in itemCatalog[item][0])) 
+                        and not 
+                        ((f"failed to correctly get {item} stock status." in oldCatalog[item][0]) or (f"failed to correctly get {item} stock status." in itemCatalog[item][0]))
+                        ):
+                        await channel.send("**Stock Change Alert!**\n" + f"{itemCatalog[item][0]}\n{itemCatalog[item][1]}\n{itemCatalog[item][2]}\n\n")
+                except Exception as error:
+                    print(f"Failed to send stock alert message. Failed with error: {error}")
+            
+            oldCatalog = itemCatalog           
+
 
     async def fridaySpecial():
         channel = client.get_channel(int(os.getenv('GAME_CHAT_CHANNEL')))
@@ -87,6 +109,7 @@ def main():
     async def on_ready():
         print(f'{client.user} is now online!')
         await recceInStockMessage()
+        await inStockMessage()
         await fridaySpecial()
     botThread.start()
 
@@ -104,11 +127,11 @@ def main():
                 #Check if item is in stock
                 try:
                     stockStatus = webScrape.stock_request(soupObject, websiteData[website][item]["stockCheckType"])
-                except:
+                except Exception as error:
                     print(f"Failed to parse web page html for {item}.\nError given: {error}\n\n")
                     stockStatus = f"failed to correctly get {item} stock status."
                 #Add item to the catalog
-                itemCatalog[item] = (f"**{item}** is {stockStatus}\nTime of search: {time.asctime()}", websiteData[website][item]["url"])                    
+                itemCatalog[item] = (f"**{item}** is {stockStatus}", f"Time of search: {time.asctime()}", websiteData[website][item]["url"])
         time.sleep(60)
 
  
