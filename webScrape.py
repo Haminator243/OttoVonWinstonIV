@@ -30,9 +30,19 @@ def onward_research_item_stock_check(soupObject):
     
 
 def gorilla_mind_item_stock_check(soupObject):
-    tempDict = {"class": "product__price"}
+    tempDict = {"class": "product__price"} #When item is out of stock
     tempSoupStorage = soupObject.find("div", tempDict)
     productPriceClassText = tempSoupStorage.text
+    
+    if "Add to Cart" in productPriceClassText:
+        return "in stock!"
+    elif "Sold Out" in productPriceClassText:
+        return "not in stock :("
+    
+    tempDict = {"class":"product-form__group"} #When item is in stock
+    tempSoupStorage = soupObject.find("div", tempDict)
+    productPriceClassText = tempSoupStorage.text   
+
     if "Add to Cart" in productPriceClassText:
         return "in stock!"
     elif "Sold Out" in productPriceClassText:
